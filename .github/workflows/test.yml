@@ -1,11 +1,17 @@
-name: Python CI
+name: CI CD
 
 on:
   push:
     branches:
       - main
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
+
   test-and-build:
 
     runs-on: ubuntu-latest
@@ -26,14 +32,28 @@ jobs:
       - name: Run tests
         run: pytest
 
-      - name: Build project
+      - name: Build website
         run: |
           mkdir build
-          cp calculator.py build/
-          cp test_calculator.py build/
+          cp index.html build/
 
-      - name: Upload build
-        uses: actions/upload-artifact@v4
+      - name: Upload website
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: calculator-build
-          path: build/
+          path: build
+
+  deploy:
+
+    needs: test-and-build
+
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
